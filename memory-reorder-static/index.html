@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    /*-------------------------
+    /*======================
       قواعد عامة
-    -------------------------*/
+    ======================*/
     * {
       box-sizing: border-box;
       margin: 0;
@@ -25,16 +25,16 @@
       padding: 20px;
     }
 
-    /*-------------------------
+    /*======================
       الحاوية الرئيسية
-    -------------------------*/
+    ======================*/
     .container {
-      background: rgba(0, 0, 0, 0.4); /* غامق أكثر من السابق */
+      background: rgba(0, 0, 0, 0.4);
       border-radius: 8px;
       padding: 24px;
       width: 100%;
       max-width: 380px;
-      text-align: right; /* اتجاه النص من اليمين */
+      text-align: right;
     }
     h1 {
       font-size: 1.8rem;
@@ -43,16 +43,16 @@
       color: #e0f7fa;
     }
 
-    /*-------------------------
+    /*======================
       زر إنشاء الغرفة
-    -------------------------*/
+    ======================*/
     .create-room {
       display: block;
       width: 100%;
       padding: 10px;
       margin-bottom: 20px;
       font-size: 1rem;
-      background: #2e7d32; /* أخضر داكن */
+      background: #2e7d32;
       border: none;
       border-radius: 4px;
       color: #fff;
@@ -66,9 +66,9 @@
       transform: scale(0.98);
     }
 
-    /*-------------------------
-      حقول الإدخال
-    -------------------------*/
+    /*======================
+      حقول الإدخال (خلفية فاتحة)
+    ======================*/
     .input-container {
       margin-bottom: 12px;
     }
@@ -82,20 +82,20 @@
       width: 100%;
       padding: 8px 12px;
       font-size: 1rem;
-      text-align: right; /* يبدأ الإدخال من الجهة اليمنى */
+      text-align: right;
       border: 2px solid #a5d6a7;
       border-radius: 4px;
-      background:#a5d6a7; /* شفافية أكثر للحصول على لون غامق */
-      color: #e1ffe9;
-      direction: rtl; /* تأكيد على اتجاه النص من اليمين داخل الحقل */
+      background: rgba(255, 255, 255, 0.9); /* خلفية فاتحة */
+      color: #004d40;
+      direction: rtl;
     }
     .input-container input::placeholder {
       text-align: right;
     }
 
-    /*-------------------------
+    /*======================
       زر الدخول
-    -------------------------*/
+    ======================*/
     .controls {
       display: flex;
       gap: 10px;
@@ -119,9 +119,9 @@
       transform: scale(0.98);
     }
 
-    /*-------------------------
+    /*======================
       استجابة شاشات الجوال
-    -------------------------*/
+    ======================*/
     @media (max-width: 360px) {
       .container {
         padding: 16px;
@@ -145,7 +145,7 @@
     <!-- زر إنشاء غرفة جديدة -->
     <button class="create-room" id="createRoomBtn">إنشاء غرفة جديدة</button>
 
-    <!-- نموذج دخول اللاعب إلى غرفة معينة -->
+    <!-- نموذج دخول اللاعب -->
     <form id="entryForm" action="team.html" method="GET">
       <!-- حقل رقم الغرفة -->
       <div class="input-container">
@@ -179,12 +179,11 @@
   </div>
 
   <script>
-    // في حال رغبنا بأن زر "إنشاء غرفة جديدة" يولّد رقم عشوائي للغرفة
     document.getElementById('createRoomBtn').addEventListener('click', () => {
-      // نولّد رقم غرفة عشوائي مكوّن من 4 خانات
+      // أنشئ رقم غرفة عشوائي (4 خانات)
       const randomRoom = Math.floor(1000 + Math.random() * 9000);
-      // نضعه تلقائيًا في حقل "رقم الغرفة"
-      document.getElementById('room').value = randomRoom;
+      // انتقل مباشرةً إلى صفحة الفريق مع هذا الرقم
+      window.location.href = `team.html?room=${randomRoom}`;
     });
   </script>
 </body>
