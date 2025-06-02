@@ -1,55 +1,68 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>انضم إلى لعبة التخمين</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>دخول اللعبة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    * { box-sizing: border-box; margin:0; padding:0; user-select:none }
-    html, body {
-      height: 100%;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
     }
     body {
-      font-family: 'Tajawal', sans-serif;
       background: linear-gradient(135deg, #1b5e20, #004d40);
       color: #fff;
+      min-height: 100vh;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       padding: 20px;
     }
     .container {
-      background: rgba(0, 0, 0, 0.6); /* لون أغمق قليلًا من الخلفية */
+      background: rgba(255,255,255,0.1);
       border-radius: 8px;
       padding: 24px;
       width: 100%;
-      max-width: 320px;
-      text-align: center;
+      max-width: 360px;
+      text-align: right;
     }
     h1 {
-      font-size: 2rem;
+      font-size: 1.8rem;
       margin-bottom: 16px;
+      text-align: center;
+      color: #e0f7fa;
     }
-    .section {
-      margin-bottom: 20px;
+    .input-container {
+      margin-bottom: 12px;
     }
-    label {
+    .input-container label {
       display: block;
       font-size: 1rem;
-      text-align: left;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      color: #c5e1a5;
     }
-    input[type="text"] {
+    .input-container input {
       width: 100%;
       padding: 8px 12px;
       font-size: 1rem;
-      border: none;
+      text-align: right;
+      border: 2px solid #a5d6a7;
       border-radius: 4px;
-      margin-bottom: 12px;
-      outline: none;
+      background: rgba(255,255,255,0.9);
+      color: #004d40;
     }
-    button {
-      width: 100%;
+    .input-container input::placeholder {
+      text-align: right;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .controls button {
+      flex: 1;
       padding: 10px;
       font-size: 1rem;
       background: #38a169;
@@ -58,86 +71,55 @@
       color: #fff;
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
-      font-weight: 700;
     }
-    button:disabled {
-      background: #555;
-      cursor: not-allowed;
-    }
-    button:hover:not(:disabled) {
+    .controls button:hover {
       background: #2f855a;
     }
-    button:active:not(:disabled) {
+    .controls button:active {
       transform: scale(0.98);
     }
-    .note {
-      font-size: 0.85rem;
-      color: #c5e1a5;
+    @media (max-width: 360px) {
+      .container {
+        padding: 16px;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      .input-container input,
+      .controls button {
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>لعبة التخمين</h1>
-
-    <div class="section">
-      <button id="createBtn">إنشاء غرفة جديدة</button>
-      <div class="note" style="margin-top:8px;">
-        سيتم توليد رمز عشوائي مكون من 4 أرقام
+    <h1>أدخل بيانات اللاعب</h1>
+    <form id="entryForm" action="team.html" method="GET">
+      <div class="input-container">
+        <label for="room">رقم الغرفة:</label>
+        <input
+          type="text"
+          id="room"
+          name="room"
+          placeholder="مثلاً: 1234"
+          required
+        />
       </div>
-    </div>
-
-    <hr style="border-color: rgba(255,255,255,0.3); margin: 16px 0;">
-
-    <div class="section">
-      <label for="roomCode">أو أدخل رمز غرفة موجودة (4 أرقام):</label>
-      <input type="text" id="roomCode" placeholder="مثال: 1234" maxlength="4" autocomplete="off">
-      <label for="playerName">اسمك:</label>
-      <input type="text" id="playerName" placeholder="مثال: أحمد" maxlength="12" autocomplete="off">
-      <button id="joinBtn" disabled>انضم للغرفة</button>
-    </div>
+      <div class="input-container">
+        <label for="name">اسم اللاعب:</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          placeholder="اكتب اسمك هنا"
+          required
+        />
+      </div>
+      <div class="controls">
+        <button type="submit">دخول اللعبة</button>
+      </div>
+    </form>
   </div>
-
-  <script>
-    (function() {
-      const createBtn = document.getElementById('createBtn');
-      const roomCodeInput = document.getElementById('roomCode');
-      const nameInput = document.getElementById('playerName');
-      const joinBtn = document.getElementById('joinBtn');
-
-      // تحديث حالة زر الانضمام
-      function updateJoinState() {
-        const code = roomCodeInput.value.trim();
-        const name = nameInput.value.trim();
-        joinBtn.disabled = (code.length !== 4 || name.length === 0);
-      }
-      roomCodeInput.addEventListener('input', updateJoinState);
-      nameInput.addEventListener('input', updateJoinState);
-
-      // إنشاء غرفة جديدة
-      createBtn.addEventListener('click', () => {
-        let code = Math.floor(1000 + Math.random() * 9000).toString();
-        let name = prompt('أدخل اسمك للانضمام إلى الغرفة (' + code + '):');
-        if (!name) return;
-        name = encodeURIComponent(name.trim());
-        window.location.href = `team.html?room=${code}&name=${name}`;
-      });
-
-      // الانضمام إلى غرفة موجودة
-      joinBtn.addEventListener('click', () => {
-        const code = encodeURIComponent(roomCodeInput.value.trim());
-        const name = encodeURIComponent(nameInput.value.trim());
-        window.location.href = `team.html?room=${code}&name=${name}`;
-      });
-
-      // دعم الضغط على Enter
-      roomCodeInput.addEventListener('keypress', e => {
-        if (e.key === 'Enter') nameInput.focus();
-      });
-      nameInput.addEventListener('keypress', e => {
-        if (e.key === 'Enter' && !joinBtn.disabled) joinBtn.click();
-      });
-    })();
-  </script>
 </body>
 </html>
