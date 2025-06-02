@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <title>دخول اللعبة</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
+    /* قاعدة عامة لإزالة الهوامش وضبط الخط */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -20,13 +22,15 @@
       align-items: center;
       padding: 20px;
     }
+
+    /* الحاوية الرئيسية */
     .container {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 8px;
       padding: 24px;
       width: 100%;
       max-width: 360px;
-      text-align: right;
+      text-align: right; /* تُحافظ على اتجاه النص إلى اليمين */
     }
     h1 {
       font-size: 1.8rem;
@@ -34,6 +38,8 @@
       text-align: center;
       color: #e0f7fa;
     }
+
+    /* الحاويات الخاصة بالمدخلات */
     .input-container {
       margin-bottom: 12px;
     }
@@ -47,15 +53,17 @@
       width: 100%;
       padding: 8px 12px;
       font-size: 1rem;
-      text-align: right;
+      text-align: right; /* يجعل كتابة المستخدم تظهر من الجهة اليمنى */
       border: 2px solid #a5d6a7;
       border-radius: 4px;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255, 255, 255, 0.9);
       color: #004d40;
     }
     .input-container input::placeholder {
-      text-align: right;
+      text-align: right; /* placeholder يظهر من اليمين */
     }
+
+    /* أزرار الدخول */
     .controls {
       display: flex;
       gap: 10px;
@@ -78,6 +86,8 @@
     .controls button:active {
       transform: scale(0.98);
     }
+
+    /* استجابة شاشات الجوال الصغيرة */
     @media (max-width: 360px) {
       .container {
         padding: 16px;
@@ -96,6 +106,7 @@
   <div class="container">
     <h1>أدخل بيانات اللاعب</h1>
     <form id="entryForm" action="team.html" method="GET">
+      <!-- خانة رقم الغرفة -->
       <div class="input-container">
         <label for="room">رقم الغرفة:</label>
         <input
@@ -106,6 +117,7 @@
           required
         />
       </div>
+      <!-- خانة اسم اللاعب -->
       <div class="input-container">
         <label for="name">اسم اللاعب:</label>
         <input
@@ -116,6 +128,7 @@
           required
         />
       </div>
+      <!-- زر الدخول -->
       <div class="controls">
         <button type="submit">دخول اللعبة</button>
       </div>
