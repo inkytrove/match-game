@@ -1,0 +1,4 @@
+node_modules/
+.env
+git add .
+git commit -m "Initial commit of memory-reorder-game"

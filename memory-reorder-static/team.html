@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>لعبة التخمين</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- مكتبة Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- جلب خطّ "Tajawal" العريض -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #1b5e20, #004d40);
+      color: #fff;
+      padding: 10px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      text-align: center;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    header h1 {
+      font-size: 2.4rem;
+      margin-bottom: 6px;
+    }
+    #roomDisplay {
+      font-size: 1rem;
+      color: #c5e1a5;
+      margin-bottom: 4px;
+    }
+    #teamName {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    #roundName {
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .instructions {
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+
+    /* قائمة اللاعبين + نقاطهم */
+    #playersScores {
+      margin-bottom: 12px;
+      width: 100%;
+      max-width: 360px;
+      list-style: none;
+      padding: 0;
+    }
+    #playersScores li {
+      font-size: 1rem;
+      margin-bottom: 4px;
+      color: #c5e1a5;
+    }
+
+    /* أزرار البدء والتأكيد */
+    .controls {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 16px;
+    }
+    .controls button {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      background: #38a169;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .controls button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    .controls button:hover:not(:disabled) {
+      background: #2f855a;
+    }
+    .controls button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    /* لوحات الصور الأصلية والتخمين ـ ستّ عناصر أفقيًّا ثابتين */
+    .grid {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 16px;
+    }
+    .slot {
+      width: calc((100% - 5 * 5px) / 6);
+      aspect-ratio: 1;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px dashed #a5d6a7;
+      border-radius: 4px;
+      position: relative;
+    }
+    .slot img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* تغذية راجعة (عدد الإجابات الصحيحة) */
+    #feedback {
+      font-size: 1rem;
+      margin-bottom: 12px;
+      text-align: center;
+      visibility: hidden;
+      font-weight: 700;
+    }
+
+    /* عرض الترتيب الصحيح بعد انتهاء الجولة */
+    #correctAnswer {
+      display: none;
+      margin-top: 16px;
+      width: 100%;
+      max-width: 360px;
+    }
+    #correctAnswer .label {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      text-align: center;
+      color: #c5e1a5;
+      font-weight: 700;
+    }
+    #correctAnswer .grid {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 16px;
+    }
+    #correctAnswer .grid .slot {
+      width: calc((100% - 5 * 5px) / 6);
+      background: rgba(255,255,255,0.1);
+      border: none;
+    }
+    #correctAnswer .grid .slot img {
+      border: 2px solid #a5d6a7;
+    }
+
+    @media (max-width: 320px) {
+      .slot {
+        width: calc((100% - 5 * 3px) / 6);
+      }
+      .grid {
+        gap: 3px;
+      }
+      #playersScores li {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>لعبة التخمين</h1>
+    <div id="roomDisplay">رمز الغرفة: —</div>
+    <div id="teamName">فريق</div>
+    <div id="roundName">الجولة: —</div>
+    <div class="instructions">اسحب الصور إلى الأسفل &mdash; أو&nbsp;بدّل بينها &mdash;  ثم اضغط تأكيد </div>
+  </header>
+
+  <!-- قائمة اللاعبين + نقاطهم -->
+  <ul id="playersScores"></ul>
+
+  <!-- أزرار البدء والتأكيد -->
+  <div class="controls">
+    <button id="startBtn">بدء الجولة</button>
+    <button id="submit" disabled>تأكيد</button>
+  </div>
+
+  <!-- لوحة الصور الأصلية (٦ صور أفقيًا) -->
+  <div class="grid" id="board"></div>
+
+  <!-- لوحة التخمين (٦ خانات أفقيًا) -->
+  <div class="grid" id="slots"></div>
+
+  <!-- تغذية راجعة لعدد الإجابات الصحيحة -->
+  <div id="feedback">الإجابات الصحيحة: 0 من 0</div>
+
+  <!-- عرض الترتيب الصحيح بعد نهاية الجولة (٦ صور) -->
+  <div id="correctAnswer">
+    <div class="label">الترتيب الصحيح:</div>
+    <div class="grid" id="answerGrid"></div>
+  </div>
+
+  <script>
+    // منع قائمة النقر اليمنى على الصور
+    document.body.addEventListener('contextmenu', e => {
+      if (e.target.tagName === 'IMG') e.preventDefault();
+    });
+
+    const socket = io();
+
+    // قراءة room و name من رابط الصفحة
+    const params   = new URLSearchParams(location.search);
+    const roomId   = params.get('room') || 'eid-room';
+    let playerName = params.get('name') || prompt('أدخل اسمك');
+    playerName     = decodeURIComponent(playerName);
+
+    // مراجع DOM
+    const roomDisplay   = document.getElementById('roomDisplay');
+    const playersScores = document.getElementById('playersScores');
+    const teamEl        = document.getElementById('teamName');
+    const roundEl       = document.getElementById('roundName');
+    const startBtn      = document.getElementById('startBtn');
+    const submitBtn     = document.getElementById('submit');
+    const boardEl       = document.getElementById('board');
+    const slotsEl       = document.getElementById('slots');
+    const fb            = document.getElementById('feedback');
+    const correctAnswer = document.getElementById('correctAnswer');
+    const answerGrid    = document.getElementById('answerGrid');
+
+    let items = [], draggedImg = null;
+
+    // عرض رمز الغرفة واسم اللاعب
+    roomDisplay.textContent = `رمز الغرفة: ${roomId}`;
+    teamEl.textContent      = playerName;
+
+    // انضمام اللاعب إلى الغرفة
+    socket.emit('joinRoom', { roomId, playerName });
+
+    // استقبال تحديث الحالة (قائمة اللاعبين + النقاط)
+    socket.on('stateMulti', ({ scores: sc, players }) => {
+      // عرض اللاعبين ونقاطهم
+      playersScores.innerHTML = '';
+      players.forEach(p => {
+        const li = document.createElement('li');
+        const pts = sc[p.name] || 0;
+        li.textContent = `${p.name}: ${pts} نقطة`;
+        playersScores.appendChild(li);
+      });
+    });
+
+    // معالجة خطأ بدء الجولة بدون لاعبين كافيين
+    socket.on('errorMulti', ({ message }) => {
+      alert(message);
+    });
+
+    // عند الضغط على "بدء الجولة"
+    startBtn.addEventListener('click', () => {
+      socket.emit('startRound', { roomId });
+      startBtn.disabled = true;
+    });
+
+    // استقبال بداية الجولة
+    socket.on('roundStartedMulti', ({ items: newItems, roundName: cat, scores: sc, currentRound, players }) => {
+      items = newItems;
+      // تحديث عنوان الجولة
+      roundEl.textContent = `الجولة ${currentRound}: ${translateCategory(cat)}`;
+      // تحديث النقاط
+      playersScores.innerHTML = '';
+      players.forEach(p => {
+        const li = document.createElement('li');
+        const pts = sc[p.name] || 0;
+        li.textContent = `${p.name}: ${pts} نقطة`;
+        playersScores.appendChild(li);
+      });
+
+      // إعداد التغذية الراجعة
+      fb.style.visibility = 'visible';
+      fb.textContent = `الإجابات الصحيحة: 0 من ${items.length}`;
+      submitBtn.disabled = false;
+
+      // إخفاء الترتيب الصحيح السابق إن وُجد
+      correctAnswer.style.display = 'none';
+      answerGrid.innerHTML = '';
+
+      // بناء لوحة الصور الأصلية (٦ صور)
+      boardEl.innerHTML = '';
+      items.forEach(src => {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.addEventListener('dragover', e => e.preventDefault());
+        slot.addEventListener('drop', dropOnBoard);
+
+        const img = document.createElement('img');
+        img.src = src;
+        img.draggable = true;
+        img.addEventListener('dragstart', e => {
+          draggedImg = e.target;
+          e.dataTransfer.setData('text/plain', src);
+          e.dataTransfer.setData('from', 'board');
+        });
+
+        slot.appendChild(img);
+        boardEl.appendChild(slot);
+      });
+
+      // بناء مربعات التخمين الفارغة (٦ خانات)
+      slotsEl.innerHTML = '';
+      items.forEach(() => {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.addEventListener('dragover', e => e.preventDefault());
+        slot.addEventListener('drop', dropOnSlot);
+        slotsEl.appendChild(slot);
+      });
+    });
+
+    // عند الضغط على "تأكيد"
+    submitBtn.addEventListener('click', () => {
+      const order = Array.from(slotsEl.children).map(s => {
+        const img = s.querySelector('img');
+        return img ? img.getAttribute('src').replace(location.origin, '') : null;
+      });
+      socket.emit('submitOrder', {
+        roomId,
+        playerId: playerName,
+        order
+      });
+      // لا نعطّل الزر؛ يمكن الضغط مجددًا قبل تحقيق 6/6
+    });
+
+    // استقبال تغذية راجعة لعدد الإجابات الصحيحة
+    socket.on('feedbackMulti', ({ player, correctCount, total }) => {
+      // إذا كان هذا اللاعب هو نفس اللاعب الحالي، حدّث التغذية الراجعة
+      if (player === playerName) {
+        fb.textContent = `الإجابات الصحيحة: ${correctCount} من ${total}`;
+      }
+      // لا نعطِّل زر "تأكيد" هنا؛ يسمح للمحاولة مجدّدًا حتى 6/6
+    });
+
+    // استقبال نتيجة الجولة (فوز/خسارة + عرض الترتيب الصحيح)
+    socket.on('roundWinMulti', ({ scores: sc, winners, roundNumber, answer }) => {
+      // تحديث النقاط
+      playersScores.innerHTML = '';
+      Object.entries(sc).forEach(([name, pts]) => {
+        const li = document.createElement('li');
+        li.textContent = `${name}: ${pts} نقطة`;
+        playersScores.appendChild(li);
+      });
+
+      // إذا كان اسمي من الفائزين، أظهر رسالة الفوز
+      if (winners.includes(playerName)) {
+        fb.textContent = `🎉 لقد فزت في هذه الجولة!`;
+      } else {
+        fb.textContent = `😢 خسرت هذه الجولة!`;
+      }
+
+      // عرض الترتيب الصحيح (٦ صور)
+      answerGrid.innerHTML = '';
+      answer.forEach(src => {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        const img = document.createElement('img');
+        img.src = src;
+        img.draggable = false;
+        slot.appendChild(img);
+        answerGrid.appendChild(slot);
+      });
+      correctAnswer.style.display = 'block';
+
+      // تعطيل زر "تأكيد" بعد انتهاء الجولة
+      submitBtn.disabled = true;
+    });
+
+    // استقبال إشارة لإعادة تفعيل زر بدء الجولة التالية
+    socket.on('enableStartNext', () => {
+      startBtn.disabled   = false;
+      startBtn.textContent = 'بدء الجولة التالية';
+    });
+
+    // استقبال نهاية اللعبة النهائي
+    socket.on('finalGameEndMulti', ({ scores: sc, finalWinners }) => {
+      // تحديث النقاط النهائية
+      playersScores.innerHTML = '';
+      Object.entries(sc).forEach(([name, pts]) => {
+        const li = document.createElement('li');
+        li.textContent = `${name}: ${pts} نقطة`;
+        playersScores.appendChild(li);
+      });
+
+      // عرض نافذة Overlay تهنئة أو تعادل
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.background = 'rgba(0,0,0,0.8)';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.justifyContent = 'center';
+      overlay.style.alignItems = 'center';
+      overlay.style.color = '#fff';
+      overlay.style.fontSize = '2rem';
+      overlay.style.zIndex = '999';
+      overlay.style.textAlign = 'center';
+      overlay.style.padding = '20px';
+
+      let message = '';
+      if (finalWinners.includes(playerName)) {
+        message = '🎉 ألف مبروك! أنت الفائز!';
+      } else if (finalWinners.length === 1 && !finalWinners.includes(playerName)) {
+        message = '😢 انتهت اللعبة. فاز لاعب آخر.';
+      } else {
+        message = '⚖️ انتهت اللعبة بتعادل بين:\n' + finalWinners.join(' و ');
+      }
+      const lines = message.split('\n');
+      lines.forEach((ln, idx) => {
+        const p = document.createElement('div');
+        p.textContent = ln;
+        if (idx === 0) p.style.marginBottom = '12px';
+        overlay.appendChild(p);
+      });
+
+      document.body.appendChild(overlay);
+
+      // بعد 5 ثوانٍ إعادة توجيه إلى الصفحة الرئيسية للخادم
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 5000);
+    });
+
+    // إسقاط الصورة من اللوحة الأصلية إلى خانة التخمين أو تبديل موقعين ضمن الخانات
+    function dropOnSlot(e) {
+      e.preventDefault();
+      const from = e.dataTransfer.getData('from');
+      const url  = e.dataTransfer.getData('text/plain');
+
+      // حالة السحب من اللوحة الأصلية إلى خانة التخمين
+      if (from === 'board') {
+        if (e.currentTarget.querySelector('img')) return;
+        const orig = boardEl.querySelector(`img[src="${url}"]`);
+        if (orig) orig.remove();
+        const img = document.createElement('img');
+        img.src = url;
+        img.draggable = true;
+        img.addEventListener('dragstart', ev => {
+          draggedImg = ev.target;
+          ev.dataTransfer.setData('text/plain', url);
+          ev.dataTransfer.setData('from', 'slot');
+        });
+        e.currentTarget.appendChild(img);
+      }
+      // حالة السحب من خانة تخمين إلى خانة تخمين أخرى (swap)
+      else if (from === 'slot') {
+        if (!draggedImg) return;
+        if (!e.currentTarget.querySelector('img')) {
+          const parentOfDragged = draggedImg.parentElement;
+          parentOfDragged.removeChild(draggedImg);
+          e.currentTarget.appendChild(draggedImg);
+        } else {
+          const targetImg = e.currentTarget.querySelector('img');
+          const tempSrc = targetImg.src;
+          targetImg.src = draggedImg.src;
+          draggedImg.src = tempSrc;
+        }
+      }
+    }
+
+    // إعادة الصورة من خانة التخمين إلى أي خانة فارغة في اللوحة الأصلية
+    function dropOnBoard(e) {
+      e.preventDefault();
+      if (e.dataTransfer.getData('from') !== 'slot') return;
+      if (e.currentTarget.querySelector('img')) return;
+      if (draggedImg) {
+        const parentOfDragged = draggedImg.parentElement;
+        parentOfDragged.removeChild(draggedImg);
+        e.currentTarget.appendChild(draggedImg);
+      }
+    }
+
+    // ترجمة اسم التصنيف إلى العربي
+    function translateCategory(cat) {
+      const catNames = {
+        fruits:  'الفواكه',
+        drinks:  'المشروبات',
+        tools:   'الأدوات',
+        veggies: 'الخضروات',
+        animals: 'الحيوانات'
+      };
+      return catNames[cat] || cat;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>انضم إلى لعبة التخمين</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; user-select:none }
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #1b5e20, #004d40);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.6); /* لون أغمق قليلًا من الخلفية */
+      border-radius: 8px;
+      padding: 24px;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 1rem;
+      text-align: left;
+      margin-bottom: 6px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      background: #38a169;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      font-weight: 700;
+    }
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background: #2f855a;
+    }
+    button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    .note {
+      font-size: 0.85rem;
+      color: #c5e1a5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>لعبة التخمين</h1>
+
+    <div class="section">
+      <button id="createBtn">إنشاء غرفة جديدة</button>
+      <div class="note" style="margin-top:8px;">
+        سيتم توليد رمز عشوائي مكون من 4 أرقام
+      </div>
+    </div>
+
+    <hr style="border-color: rgba(255,255,255,0.3); margin: 16px 0;">
+
+    <div class="section">
+      <label for="roomCode">أو أدخل رمز غرفة موجودة (4 أرقام):</label>
+      <input type="text" id="roomCode" placeholder="مثال: 1234" maxlength="4" autocomplete="off">
+      <label for="playerName">اسمك:</label>
+      <input type="text" id="playerName" placeholder="مثال: أحمد" maxlength="12" autocomplete="off">
+      <button id="joinBtn" disabled>انضم للغرفة</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const createBtn = document.getElementById('createBtn');
+      const roomCodeInput = document.getElementById('roomCode');
+      const nameInput = document.getElementById('playerName');
+      const joinBtn = document.getElementById('joinBtn');
+
+      // تحديث حالة زر الانضمام
+      function updateJoinState() {
+        const code = roomCodeInput.value.trim();
+        const name = nameInput.value.trim();
+        joinBtn.disabled = (code.length !== 4 || name.length === 0);
+      }
+      roomCodeInput.addEventListener('input', updateJoinState);
+      nameInput.addEventListener('input', updateJoinState);
+
+      // إنشاء غرفة جديدة
+      createBtn.addEventListener('click', () => {
+        let code = Math.floor(1000 + Math.random() * 9000).toString();
+        let name = prompt('أدخل اسمك للانضمام إلى الغرفة (' + code + '):');
+        if (!name) return;
+        name = encodeURIComponent(name.trim());
+        window.location.href = `team.html?room=${code}&name=${name}`;
+      });
+
+      // الانضمام إلى غرفة موجودة
+      joinBtn.addEventListener('click', () => {
+        const code = encodeURIComponent(roomCodeInput.value.trim());
+        const name = encodeURIComponent(nameInput.value.trim());
+        window.location.href = `team.html?room=${code}&name=${name}`;
+      });
+
+      // دعم الضغط على Enter
+      roomCodeInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') nameInput.focus();
+      });
+      nameInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter' && !joinBtn.disabled) joinBtn.click();
+      });
+    })();
+  </script>
+</body>
+</html>
