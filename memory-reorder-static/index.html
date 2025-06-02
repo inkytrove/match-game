@@ -2,11 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>دخول اللعبة</title>
+  <title>لعبة التخمين</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    /* قاعدة عامة لإزالة الهوامش وضبط الخط */
+    /*-------------------------
+      قواعد عامة
+    -------------------------*/
     * {
       box-sizing: border-box;
       margin: 0;
@@ -23,14 +25,16 @@
       padding: 20px;
     }
 
-    /* الحاوية الرئيسية */
+    /*-------------------------
+      الحاوية الرئيسية
+    -------------------------*/
     .container {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.4); /* غامق أكثر من السابق */
       border-radius: 8px;
       padding: 24px;
       width: 100%;
-      max-width: 360px;
-      text-align: right; /* تُحافظ على اتجاه النص إلى اليمين */
+      max-width: 380px;
+      text-align: right; /* اتجاه النص من اليمين */
     }
     h1 {
       font-size: 1.8rem;
@@ -39,7 +43,32 @@
       color: #e0f7fa;
     }
 
-    /* الحاويات الخاصة بالمدخلات */
+    /*-------------------------
+      زر إنشاء الغرفة
+    -------------------------*/
+    .create-room {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      font-size: 1rem;
+      background: #2e7d32; /* أخضر داكن */
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .create-room:hover {
+      background: #1b5e20;
+    }
+    .create-room:active {
+      transform: scale(0.98);
+    }
+
+    /*-------------------------
+      حقول الإدخال
+    -------------------------*/
     .input-container {
       margin-bottom: 12px;
     }
@@ -53,17 +82,20 @@
       width: 100%;
       padding: 8px 12px;
       font-size: 1rem;
-      text-align: right; /* يجعل كتابة المستخدم تظهر من الجهة اليمنى */
+      text-align: right; /* يبدأ الإدخال من الجهة اليمنى */
       border: 2px solid #a5d6a7;
       border-radius: 4px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #004d40;
+      background:#a5d6a7; /* شفافية أكثر للحصول على لون غامق */
+      color: #e1ffe9;
+      direction: rtl; /* تأكيد على اتجاه النص من اليمين داخل الحقل */
     }
     .input-container input::placeholder {
-      text-align: right; /* placeholder يظهر من اليمين */
+      text-align: right;
     }
 
-    /* أزرار الدخول */
+    /*-------------------------
+      زر الدخول
+    -------------------------*/
     .controls {
       display: flex;
       gap: 10px;
@@ -87,7 +119,9 @@
       transform: scale(0.98);
     }
 
-    /* استجابة شاشات الجوال الصغيرة */
+    /*-------------------------
+      استجابة شاشات الجوال
+    -------------------------*/
     @media (max-width: 360px) {
       .container {
         padding: 16px;
@@ -95,6 +129,7 @@
       h1 {
         font-size: 1.6rem;
       }
+      .create-room,
       .input-container input,
       .controls button {
         font-size: 0.9rem;
@@ -104,9 +139,15 @@
 </head>
 <body>
   <div class="container">
-    <h1>أدخل بيانات اللاعب</h1>
+    <!-- عنوان اللعبة -->
+    <h1>لعبة التخمين</h1>
+
+    <!-- زر إنشاء غرفة جديدة -->
+    <button class="create-room" id="createRoomBtn">إنشاء غرفة جديدة</button>
+
+    <!-- نموذج دخول اللاعب إلى غرفة معينة -->
     <form id="entryForm" action="team.html" method="GET">
-      <!-- خانة رقم الغرفة -->
+      <!-- حقل رقم الغرفة -->
       <div class="input-container">
         <label for="room">رقم الغرفة:</label>
         <input
@@ -117,7 +158,8 @@
           required
         />
       </div>
-      <!-- خانة اسم اللاعب -->
+
+      <!-- حقل اسم اللاعب -->
       <div class="input-container">
         <label for="name">اسم اللاعب:</label>
         <input
@@ -128,11 +170,22 @@
           required
         />
       </div>
+
       <!-- زر الدخول -->
       <div class="controls">
-        <button type="submit">دخول اللعبة</button>
+        <button type="submit">دخول الغرفة</button>
       </div>
     </form>
   </div>
+
+  <script>
+    // في حال رغبنا بأن زر "إنشاء غرفة جديدة" يولّد رقم عشوائي للغرفة
+    document.getElementById('createRoomBtn').addEventListener('click', () => {
+      // نولّد رقم غرفة عشوائي مكوّن من 4 خانات
+      const randomRoom = Math.floor(1000 + Math.random() * 9000);
+      // نضعه تلقائيًا في حقل "رقم الغرفة"
+      document.getElementById('room').value = randomRoom;
+    });
+  </script>
 </body>
 </html>
