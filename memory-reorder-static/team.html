@@ -12,21 +12,28 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700&display=swap" rel="stylesheet">
 
   <style>
+    /* نجعل html يمتلئ كامل الارتفاع، ونضع عليه التدرّج الأخضر */
+    html {
+      height: 100%;
+      background: linear-gradient(135deg, #1b5e20, #004d40);
+    }
+    /* body شفاف وتحتفظ بالـpadding الذي تريده */
+    body {
+      font-family: 'Tajawal', sans-serif;
+      color: #fff;
+      padding: 10px; /* يمكنك تعديلها حسب الحاجة */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: transparent;
+      margin: 0; /* نتأكد من إزالة أي margin افتراضي */
+    }
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       user-select: none;
-    }
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background: linear-gradient(135deg, #1b5e20, #004d40);
-      color: #fff;
-      padding: 10px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
     header {
       text-align: center;
@@ -106,10 +113,11 @@
     #board {
       display: flex;
       justify-content: space-between;
-      gap: 6px;            /* فجوة 6 بكسل بين الخانات */
+      gap: 6px;
       width: 100%;
-      max-width: 800px;    /* يسمح للوحة أن تمتدّ حتى 800px على الشاشات الكبيرة */
+      max-width: 800px;
       margin-bottom: 12px;
+      background: transparent;
     }
     /* لوحة أماكن التخمين */
     #slots {
@@ -119,9 +127,10 @@
       width: 100%;
       max-width: 800px;
       margin-bottom: 16px;
+      background: transparent;
     }
     .slot {
-      width: calc((100% - 5 * 6px) / 6); /* إعادة حساب العرض بناءً على gap=6px */
+      width: calc((100% - 5 * 6px) / 6);
       aspect-ratio: 1;
       background: transparent;
       border: 2px solid #a5d6a7;
@@ -156,6 +165,7 @@
       margin-top: 16px;
       width: 100%;
       max-width: 800px;
+      background: transparent;
     }
     #correctAnswer .label {
       font-size: 1rem;
@@ -171,6 +181,7 @@
       width: 100%;
       max-width: 800px;
       margin-bottom: 16px;
+      background: transparent;
     }
     #correctAnswer .grid .slot {
       width: calc((100% - 5 * 6px) / 6);
@@ -184,7 +195,7 @@
     /* التكيّف مع الشاشات الصغيرة */
     @media (max-width: 480px) {
       body {
-        padding: 5px; /* تقليل الهامش لزيادة عرض الصور */
+        padding: 5px;
       }
       #playersScores li {
         font-size: 0.9rem;
@@ -192,8 +203,8 @@
       #board,
       #slots,
       #correctAnswer .grid {
-        gap: 4px;        /* فراغ أصغر بين الخانات على الجوال */
-        max-width: 100%; /* ملء الشاشة بالكامل */
+        gap: 4px;
+        max-width: 100%;
       }
       .slot {
         width: calc((100% - 5 * 4px) / 6);
@@ -202,18 +213,15 @@
 
     /* عند قلب الجوال إلى وضع أفقي (Landscape) */
     @media (orientation: landscape) and (max-width: 767px) {
-      /* نجعل اللوحات تملأ عرض الشاشة تقريبًا */
       #board,
       #slots,
       #correctAnswer .grid {
-        gap: 8px;           /* فجوة أكبر قليلًا لتجنّب التلاصق */
-        max-width: 100vw;   /* تستخدم كامل عرض الشاشة الأفقية */
+        gap: 8px;
+        max-width: 100vw;
       }
       .slot {
         width: calc((100% - 5 * 8px) / 6);
-        /* نزيد ارتفاع الحاوية لتكون مربّعة وإذا لزم يمكن ضبط aspect-ratio */
       }
-      /* نوفر مساحة أقل للهامش الجانبي والإعلاني */
       body {
         padding: 2px;
       }
