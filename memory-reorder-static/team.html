@@ -102,20 +102,29 @@
       transform: scale(0.98);
     }
 
-    /* لوحات الصور الأصلية والتخمين ـ ستّ عناصر أفقيًّا ثابتين */
-    .grid {
+    /* لوحة الصور الأصلية */
+    #board {
       display: flex;
       justify-content: space-between;
-      gap: 5px;
+      gap: 4px; /* تقليل الفجوة بين الخانات */
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 8px; /* مسافة بسيطة قبل لوح التخمين */
+    }
+    /* لوحة أماكن التخمين */
+    #slots {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
       width: 100%;
       max-width: 360px;
       margin-bottom: 16px;
     }
     .slot {
-      width: calc((100% - 5 * 5px) / 6);
+      width: calc((100% - 5 * 4px) / 6);
       aspect-ratio: 1;
       background: rgba(255, 255, 255, 0.2);
-      border: 2px dashed #a5d6a7;
+      border: 2px solid #a5d6a7; /* إطار صلب */
       border-radius: 4px;
       position: relative;
     }
@@ -158,13 +167,13 @@
     #correctAnswer .grid {
       display: flex;
       justify-content: space-between;
-      gap: 5px;
+      gap: 4px;
       width: 100%;
       max-width: 360px;
       margin-bottom: 16px;
     }
     #correctAnswer .grid .slot {
-      width: calc((100% - 5 * 5px) / 6);
+      width: calc((100% - 5 * 4px) / 6);
       background: rgba(255,255,255,0.1);
       border: none;
     }
@@ -172,12 +181,16 @@
       border: 2px solid #a5d6a7;
     }
 
+    /* تكيّف مع الشاشات الصغيرة */
     @media (max-width: 320px) {
-      .slot {
-        width: calc((100% - 5 * 3px) / 6);
+      body {
+        padding: 5px; /* تقليل الهامش الجانبي */
       }
-      .grid {
-        gap: 3px;
+      #board, #slots, #correctAnswer .grid {
+        gap: 2px; /* فراغ أصغر بين الخانات */
+      }
+      .slot {
+        width: calc((100% - 5 * 2px) / 6);
       }
       #playersScores li {
         font-size: 0.9rem;
@@ -191,7 +204,7 @@
     <div id="roomDisplay">رمز الغرفة: —</div>
     <div id="teamName">فريق</div>
     <div id="roundName">الجولة: —</div>
-    <div class="instructions">اسحب الصور إلى الأسفل &mdash; أو&nbsp;بدّل بينها &mdash;  ثم اضغط تأكيد </div>
+    <div class="instructions">اسحب الصور أو بدّل بينها ثم اضغط "تأكيد"</div>
   </header>
 
   <!-- قائمة اللاعبين + نقاطهم -->
@@ -204,10 +217,10 @@
   </div>
 
   <!-- لوحة الصور الأصلية (٦ صور أفقيًا) -->
-  <div class="grid" id="board"></div>
+  <div id="board"></div>
 
   <!-- لوحة التخمين (٦ خانات أفقيًا) -->
-  <div class="grid" id="slots"></div>
+  <div id="slots"></div>
 
   <!-- تغذية راجعة لعدد الإجابات الصحيحة -->
   <div id="feedback">الإجابات الصحيحة: 0 من 0</div>
@@ -256,7 +269,6 @@
 
     // استقبال تحديث الحالة (قائمة اللاعبين + النقاط)
     socket.on('stateMulti', ({ scores: sc, players }) => {
-      // عرض اللاعبين ونقاطهم
       playersScores.innerHTML = '';
       players.forEach(p => {
         const li = document.createElement('li');
@@ -343,16 +355,14 @@
         playerId: playerName,
         order
       });
-      // لا نعطّل الزر؛ يمكن الضغط مجددًا قبل تحقيق 6/6
+      // لا نعطّل الزر؛ يمكن الضغط مجددًا حتى إكمال الترتيب الصحيح
     });
 
     // استقبال تغذية راجعة لعدد الإجابات الصحيحة
     socket.on('feedbackMulti', ({ player, correctCount, total }) => {
-      // إذا كان هذا اللاعب هو نفس اللاعب الحالي، حدّث التغذية الراجعة
       if (player === playerName) {
         fb.textContent = `الإجابات الصحيحة: ${correctCount} من ${total}`;
       }
-      // لا نعطِّل زر "تأكيد" هنا؛ يسمح للمحاولة مجدّدًا حتى 6/6
     });
 
     // استقبال نتيجة الجولة (فوز/خسارة + عرض الترتيب الصحيح)
@@ -365,7 +375,7 @@
         playersScores.appendChild(li);
       });
 
-      // إذا كان اسمي من الفائزين، أظهر رسالة الفوز
+      // رسالة الفوز/الخسارة
       if (winners.includes(playerName)) {
         fb.textContent = `🎉 لقد فزت في هذه الجولة!`;
       } else {
@@ -405,7 +415,7 @@
         playersScores.appendChild(li);
       });
 
-      // عرض نافذة Overlay تهنئة أو تعادل
+      // عرض نافذة Overlay للتهنئة أو التعادل
       const overlay = document.createElement('div');
       overlay.style.position = 'fixed';
       overlay.style.top = '0';
@@ -447,13 +457,13 @@
       }, 5000);
     });
 
-    // إسقاط الصورة من اللوحة الأصلية إلى خانة التخمين أو تبديل موقعين ضمن الخانات
+    // وظيفة الإسقاط في خانة التخمين (dropOnSlot)
     function dropOnSlot(e) {
       e.preventDefault();
       const from = e.dataTransfer.getData('from');
       const url  = e.dataTransfer.getData('text/plain');
 
-      // حالة السحب من اللوحة الأصلية إلى خانة التخمين
+      // حالة السحب من اللوحة الأصلية للانتقال إلى مكان التخمين
       if (from === 'board') {
         if (e.currentTarget.querySelector('img')) return;
         const orig = boardEl.querySelector(`img[src="${url}"]`);
@@ -468,7 +478,7 @@
         });
         e.currentTarget.appendChild(img);
       }
-      // حالة السحب من خانة تخمين إلى خانة تخمين أخرى (swap)
+      // حالة التبديل بين خانات التخمين
       else if (from === 'slot') {
         if (!draggedImg) return;
         if (!e.currentTarget.querySelector('img')) {
@@ -484,7 +494,7 @@
       }
     }
 
-    // إعادة الصورة من خانة التخمين إلى أي خانة فارغة في اللوحة الأصلية
+    // وظيفة الإسقاط للعودة إلى اللوحة الأصلية (dropOnBoard)
     function dropOnBoard(e) {
       e.preventDefault();
       if (e.dataTransfer.getData('from') !== 'slot') return;
