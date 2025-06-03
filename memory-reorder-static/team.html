@@ -102,39 +102,32 @@
       transform: scale(0.98);
     }
 
-    /* نسمح للوحتيّ الصور والتخمين أن تملأا تقريبًا كامل عرض الشاشة على الهواتف والحواسب */
-#board,
-#slots {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;           /* نزيد الفجوة قليلاً لتجنّب تلاصق الصور عند التكبير */
-  width: 100%;
-  max-width: 800px;   /* نرفع الحد الأقصى إلى 800px ليعرض الصور بحجم أكبر على الشاشات العريضة */
-  margin-bottom: 12px;
-}
-
-/* إعادة حساب عرض كل خانة بحيث تكون أكبر نسبيًا */
-.slot {
-  width: calc((100% - 5 * 6px) / 6); /* استخدمنا gap = 6px بدلاً من 4px */
-  aspect-ratio: 1;
-  background: transparent;
-  border: 2px solid #a5d6a7;
-  border-radius: 4px;
-  position: relative;
-}
-
-/* تكيّف للشاشات الصغير جدًّا */
-@media (max-width: 480px) {
-  #board,
-  #slots {
-    gap: 4px;         /* أقل قليلاً لكي تملأ الخانات العرض بالكامل */
-    max-width: 100%;  /* تمكين الملء الكامل للشاشة الصغيرة */
-  }
-  .slot {
-    width: calc((100% - 5 * 4px) / 6);
-  }
-}
-
+    /* لوحة الصور الأصلية */
+    #board {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;            /* فجوة 6 بكسل بين الخانات */
+      width: 100%;
+      max-width: 800px;    /* يسمح للوحة أن تمتدّ حتى 800px على الشاشات الكبيرة */
+      margin-bottom: 12px;
+    }
+    /* لوحة أماكن التخمين */
+    #slots {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 16px;
+    }
+    .slot {
+      width: calc((100% - 5 * 6px) / 6); /* إعادة حساب العرض بناءً على gap=6px */
+      aspect-ratio: 1;
+      background: transparent;
+      border: 2px solid #a5d6a7;
+      border-radius: 4px;
+      position: relative;
+    }
     .slot img {
       position: absolute;
       top: 0;
@@ -162,7 +155,7 @@
       display: none;
       margin-top: 16px;
       width: 100%;
-      max-width: 360px;
+      max-width: 800px;
     }
     #correctAnswer .label {
       font-size: 1rem;
@@ -174,13 +167,13 @@
     #correctAnswer .grid {
       display: flex;
       justify-content: space-between;
-      gap: 4px;
+      gap: 6px;
       width: 100%;
-      max-width: 360px;
+      max-width: 800px;
       margin-bottom: 16px;
     }
     #correctAnswer .grid .slot {
-      width: calc((100% - 5 * 4px) / 6);
+      width: calc((100% - 5 * 6px) / 6);
       background: rgba(255,255,255,0.1);
       border: none;
     }
@@ -188,19 +181,44 @@
       border: 2px solid #a5d6a7;
     }
 
-    /* تكيّف مع الشاشات الصغيرة */
-    @media (max-width: 320px) {
+    /* التكيّف مع الشاشات الصغيرة */
+    @media (max-width: 480px) {
       body {
-        padding: 5px; /* تقليل الهامش الجانبي */
-      }
-      #board, #slots, #correctAnswer .grid {
-        gap: 2px; /* فراغ أصغر بين الخانات */
-      }
-      .slot {
-        width: calc((100% - 5 * 2px) / 6);
+        padding: 5px; /* تقليل الهامش لزيادة عرض الصور */
       }
       #playersScores li {
         font-size: 0.9rem;
+      }
+      #board,
+      #slots,
+      #correctAnswer .grid {
+        gap: 4px;        /* فراغ أصغر بين الخانات على الجوال */
+        max-width: 100%; /* ملء الشاشة بالكامل */
+      }
+      .slot {
+        width: calc((100% - 5 * 4px) / 6);
+      }
+    }
+
+    /* عند قلب الجوال إلى وضع أفقي (Landscape) */
+    @media (orientation: landscape) and (max-width: 767px) {
+      /* نجعل اللوحات تملأ عرض الشاشة تقريبًا */
+      #board,
+      #slots,
+      #correctAnswer .grid {
+        gap: 8px;           /* فجوة أكبر قليلًا لتجنّب التلاصق */
+        max-width: 100vw;   /* تستخدم كامل عرض الشاشة الأفقية */
+      }
+      .slot {
+        width: calc((100% - 5 * 8px) / 6);
+        /* نزيد ارتفاع الحاوية لتكون مربّعة وإذا لزم يمكن ضبط aspect-ratio */
+      }
+      /* نوفر مساحة أقل للهامش الجانبي والإعلاني */
+      body {
+        padding: 2px;
+      }
+      #playersScores li {
+        font-size: 0.85rem;
       }
     }
   </style>
