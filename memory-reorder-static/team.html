@@ -3,44 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <title>لعبة التخمين</title>
-  <!-- إضافة viewport-fit=cover لتغطية الهوامش البيضاء على iOS -->
+  <!-- نضيف viewport-fit=cover لمنع الفراغات البيضاء على iOS -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-  <!-- مكتبة Socket.IO -->
+  <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
-
   <!-- خطّ Tajawal -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* 1. html شفاف، body يغطي كامل الشاشة بالتدرّج الأخضر */
+    /* 1. html شفاف، body يغطي كامل الشاشة بالخلفية الخضراء */
     html {
       height: 100%;
       margin: 0;
       padding: 0;
       background: transparent;
     }
-   body {
-  min-height: 100vh;
-  margin: 0;
-  /* نضيف 20px تحت حواف الـ“safe-area” في الأعلى حتى لا يلتصق المحتوى */
-  padding-top: calc(env(safe-area-inset-top) + 20px);
-  padding-right: env(safe-area-inset-right);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  
-  background: linear-gradient(135deg, #1b5e20, #004d40);
-  background-attachment: fixed;
-  background-size: cover;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #fff;
-  font-family: 'Tajawal', sans-serif;
-  overflow-x: hidden;
-}
+    body {
+      min-height: 100vh;
+      margin: 0;
+      /* safe-area-inset + 20px مساحة فوق العنوان */
+      padding-top: calc(env(safe-area-inset-top) + 20px);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
 
-    /* 2. نزيل أي margin أو padding افتراضي لأي عنصر */
+      background: linear-gradient(135deg, #1b5e20, #004d40);
+      background-attachment: fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #fff;
+      font-family: 'Tajawal', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* 2. نزيل أيّ هوامش أو padding افتراضية من كل عنصر */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -48,13 +47,12 @@
       user-select: none;
     }
 
-    /* 3. الرأس (Header) */
-   header {
-  text-align: center;
-  width: 100%;
-  margin-top: 2rem;    /* هذا السطر الجديد لإزاحة العنوان لأسفل بمقدار سطرين تقريبًا */
-  margin-bottom: 12px;
-}
+    /* 3. ترويسة الصفحة مع مسافة علوية مدمجة في body */
+    header {
+      text-align: center;
+      width: 100%;
+      margin-bottom: 12px;
+    }
     header h1 {
       font-size: 2.4rem;
       margin-bottom: 6px;
@@ -124,7 +122,7 @@
       transform: scale(0.98);
     }
 
-    /* 6. لوحة الصور (board) وأماكن التخمين (slots) */
+    /* 6. لوحات الصور و خانات التخمين */
     #board,
     #slots {
       display: flex;
@@ -155,7 +153,7 @@
       user-select: none;
     }
 
-    /* 7. تغذية راجعة لعدد الإجابات الصحيحة */
+    /* 7. تغذية راجعة */
     #feedback {
       font-size: 1rem;
       margin-bottom: 12px;
@@ -164,7 +162,7 @@
       font-weight: 700;
     }
 
-    /* 8. عرض الترتيب الصحيح بعد انتهاء الجولة */
+    /* 8. عرض الترتيب الصحيح */
     #correctAnswer {
       display: none;
       margin-top: 16px;
@@ -197,10 +195,13 @@
       border: 2px solid #a5d6a7;
     }
 
-    /* 9. استعلام الوسائط للهواتف العمودية */
+    /* 9. إذا كان الجهاز عموديًا */
     @media (max-width: 480px) {
       body {
-        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        padding-top: calc(env(safe-area-inset-top) + 20px);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
       }
       #playersScores li {
         font-size: 0.9rem;
@@ -216,10 +217,13 @@
       }
     }
 
-    /* 10. استعلام الوسائط عند قلب الجوال أفقيًا */
+    /* 10. إذا كان الجهاز أفقيًا */
     @media (orientation: landscape) and (max-width: 767px) {
       body {
-        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        padding-top: calc(env(safe-area-inset-top) + 20px);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
       }
       #playersScores li {
         font-size: 0.85rem;
@@ -228,7 +232,7 @@
       #slots,
       #correctAnswer .grid {
         gap: 8px;
-        max-width: 100vw; /* يغطي كامل عرض شاشة الجوال الأفقي */
+        max-width: 100vw;
       }
       .slot {
         width: calc((100% - 5 * 8px) / 6);
@@ -254,16 +258,16 @@
     <button id="submit" disabled>تأكيد</button>
   </div>
 
-  <!-- لوحة الصور الأصلية (٦ صور أفقيًا) -->
+  <!-- لوحة الصور الأصلية (٦ صور) -->
   <div id="board"></div>
 
-  <!-- لوحة التخمين (٦ خانات أفقيًا) -->
+  <!-- لوحة التخمين (٦ خانات) -->
   <div id="slots"></div>
 
   <!-- تغذية راجعة لعدد الإجابات الصحيحة -->
   <div id="feedback">الإجابات الصحيحة: 0 من 0</div>
 
-  <!-- عرض الترتيب الصحيح بعد نهاية الجولة (٦ صور) -->
+  <!-- عرض الترتيب الصحيح (٦ صور) -->
   <div id="correctAnswer">
     <div class="label">الترتيب الصحيح:</div>
     <div class="grid" id="answerGrid"></div>
@@ -272,21 +276,40 @@
   <script>
     const socket = io();
 
-    // 1. قراءة room و playerName من الرابط (Query String)
-    const params   = new URLSearchParams(location.search);
-    const roomId   = params.get('room')   || 'eid-room';
-    let playerName = params.get('name')   || prompt('أدخل اسمك');
-    playerName     = decodeURIComponent(playerName);
+    // 1. نقرأ roomId و playerName من رابط الصفحة
+    const params     = new URLSearchParams(location.search);
+    const roomId     = params.get('room') || 'eid-room';
+    let playerName   = params.get('name') || prompt('أدخل اسمك');
+    playerName       = decodeURIComponent(playerName);
 
-    // 2. نعالج الانضمام مرة واحدة فقط باستخدام sessionStorage
-    const storageKey = `joined_${roomId}_${playerName}`;
-    if (!sessionStorage.getItem(storageKey)) {
-      socket.emit('joinRoom', { roomId, playerName });
-      sessionStorage.setItem(storageKey, 'true');
-    } 
-    // إذا عدنا تحميل الصفحة، لن ننادي joinRoom ثانية (يمكنك إضافة rejoin عند دعم السيرفر)
+    // 2. نتحقّق من حالة اللعبة أولًا
+    socket.emit('checkGameStatus', { roomId });
 
-    // 3. مراجع عناصر DOM
+    socket.on('gameStatus', ({ inProgress }) => {
+      if (inProgress) {
+        alert('عذرًا، الجولة في هذه الغرفة بدأت بالفعل.');
+        window.location.href = 'index.html';
+      } else {
+        attemptJoin();
+      }
+    });
+
+    // 3. دالة الانضمام لغرفة لمرة واحدة فقط
+    function attemptJoin() {
+      const storageKey = `joined_${roomId}_${playerName}`;
+      if (!sessionStorage.getItem(storageKey)) {
+        socket.emit('joinRoom', { roomId, playerName });
+        sessionStorage.setItem(storageKey, 'true');
+      }
+    }
+
+    // 4. نتعامل مع رفض الانضمام (errorJoin)
+    socket.on('errorJoin', ({ message }) => {
+      alert(message || 'لا يمكنك الانضمام الآن.');
+      window.location.href = 'index.html';
+    });
+
+    // 5. استقبال تحديث قائمة اللاعبين والنقاط
     const roomDisplay   = document.getElementById('roomDisplay');
     const playersScores = document.getElementById('playersScores');
     const teamEl        = document.getElementById('teamName');
@@ -298,14 +321,12 @@
     const fb            = document.getElementById('feedback');
     const correctAnswer = document.getElementById('correctAnswer');
     const answerGrid    = document.getElementById('answerGrid');
-
     let items = [], draggedImg = null;
 
-    // 4. تحديث عنوان الغرفة واسم اللاعب
+    // 6. عرض رمز الغرفة واسم اللاعب
     roomDisplay.textContent = `رمز الغرفة: ${roomId}`;
     teamEl.textContent      = playerName;
 
-    // 5. استقبال التحديثات للحالة (Players + Scores)
     socket.on('stateMulti', ({ scores: sc, players }) => {
       playersScores.innerHTML = '';
       players.forEach(p => {
@@ -316,7 +337,6 @@
       });
     });
 
-    // 6. معالجة خطأ في الانضمام
     socket.on('errorMulti', ({ message }) => {
       alert(message);
     });
@@ -327,7 +347,7 @@
       startBtn.disabled = true;
     });
 
-    // 8. استقبال بداية الجولة (Round Started)
+    // 8. استقبال بداية الجولة
     socket.on('roundStartedMulti', ({ items: newItems, roundName: cat, scores: sc, currentRound, players }) => {
       items = newItems;
       roundEl.textContent = `الجولة ${currentRound}: ${translateCategory(cat)}`;
@@ -338,15 +358,13 @@
         li.textContent = `${p.name}: ${pts} نقطة`;
         playersScores.appendChild(li);
       });
-
       fb.style.visibility = 'visible';
-      fb.textContent      = `الإجابات الصحيحة: 0 من ${items.length}`;
-      submitBtn.disabled  = false;
-
+      fb.textContent = `الإجابات الصحيحة: 0 من ${items.length}`;
+      submitBtn.disabled = false;
       correctAnswer.style.display = 'none';
-      answerGrid.innerHTML       = '';
+      answerGrid.innerHTML = '';
 
-      // بناء لوحة الصور الأصلية
+      // بناء اللوحة الأصلية
       boardEl.innerHTML = '';
       items.forEach(src => {
         const slot = document.createElement('div');
@@ -367,7 +385,7 @@
         boardEl.appendChild(slot);
       });
 
-      // بناء لوحة التخمين (Slots)
+      // بناء مربعات التخمين
       slotsEl.innerHTML = '';
       items.forEach(() => {
         const slot = document.createElement('div');
@@ -387,14 +405,12 @@
       socket.emit('submitOrder', { roomId, playerId: playerName, order });
     });
 
-    // 10. استقبال التغذية الراجعة لعدد الإجابات الصحيحة
     socket.on('feedbackMulti', ({ player, correctCount, total }) => {
       if (player === playerName) {
         fb.textContent = `الإجابات الصحيحة: ${correctCount} من ${total}`;
       }
     });
 
-    // 11. استقبال نتيجة الجولة (فوز أو خسارة + عرض الإجابة الصحيحة)
     socket.on('roundWinMulti', ({ scores: sc, winners, roundNumber, answer }) => {
       playersScores.innerHTML = '';
       Object.entries(sc).forEach(([name, pts]) => {
@@ -412,7 +428,7 @@
         const slot = document.createElement('div');
         slot.className = 'slot';
         const img = document.createElement('img');
-        img.src       = src;
+        img.src = src;
         img.draggable = false;
         slot.appendChild(img);
         answerGrid.appendChild(slot);
@@ -421,13 +437,11 @@
       submitBtn.disabled = true;
     });
 
-    // 12. إعادة تفعيل زر "بدء الجولة التالية"
     socket.on('enableStartNext', () => {
       startBtn.disabled   = false;
       startBtn.textContent = 'بدء الجولة التالية';
     });
 
-    // 13. استقبال نهاية اللعبة النهائية
     socket.on('finalGameEndMulti', ({ scores: sc, finalWinners }) => {
       playersScores.innerHTML = '';
       Object.entries(sc).forEach(([name, pts]) => {
@@ -471,7 +485,6 @@
       }, 5000);
     });
 
-    // 14. وظائف السحب والإفلات
     function dropOnSlot(e) {
       e.preventDefault();
       const from = e.dataTransfer.getData('from');
@@ -514,7 +527,6 @@
       }
     }
 
-    // 15. دالة لترجمة اسم التصنيف إلى العربي
     function translateCategory(cat) {
       const catNames = {
         fruits:  'الفواكه',
