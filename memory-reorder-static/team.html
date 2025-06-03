@@ -3,38 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <title>لعبة التخمين</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- إضافة viewport-fit=cover لتغطية الهوامش البيضاء على iOS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
   <!-- مكتبة Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
 
-  <!-- جلب خطّ "Tajawal" العريض -->
+  <!-- خطّ Tajawal -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* نجعل html يمتلئ كامل الارتفاع، ونضع عليه التدرّج الأخضر */
+    /* 1. html شفاف، body يغطي كامل الشاشة بالتدرّج الأخضر */
     html {
       height: 100%;
-      background: linear-gradient(135deg, #1b5e20, #004d40);
+      margin: 0;
+      padding: 0;
+      background: transparent;
     }
-    /* body شفاف وتحتفظ بالـpadding الذي تريده */
     body {
-      font-family: 'Tajawal', sans-serif;
-      color: #fff;
-      padding: 10px; /* يمكنك تعديلها حسب الحاجة */
-      min-height: 100vh;
+      min-height: 100vh; /* يضمن تعبئة الارتفاع بالكامل */
+      margin: 0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      background: linear-gradient(135deg, #1b5e20, #004d40);
+      background-attachment: fixed;
+      background-size: cover;
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: transparent;
-      margin: 0; /* نتأكد من إزالة أي margin افتراضي */
+      color: #fff;
+      font-family: 'Tajawal', sans-serif;
+      overflow-x: hidden; /* يمنع التمرير الأفقي */
     }
+
+    /* 2. نزيل أي margin أو padding افتراضي لأي عنصر */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       user-select: none;
     }
+
+    /* 3. الرأس (Header) */
     header {
       text-align: center;
       width: 100%;
@@ -64,7 +73,7 @@
       margin-bottom: 16px;
     }
 
-    /* قائمة اللاعبين + نقاطهم */
+    /* 4. قائمة اللاعبين + نقاطهم */
     #playersScores {
       margin-bottom: 12px;
       width: 100%;
@@ -78,7 +87,7 @@
       color: #c5e1a5;
     }
 
-    /* أزرار البدء والتأكيد */
+    /* 5. أزرار البدء والتأكيد */
     .controls {
       display: flex;
       gap: 10px;
@@ -109,25 +118,15 @@
       transform: scale(0.98);
     }
 
-    /* لوحة الصور الأصلية */
-    #board {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      width: 100%;
-      max-width: 800px;
-      margin-bottom: 12px;
-      background: transparent;
-    }
-    /* لوحة أماكن التخمين */
+    /* 6. لوحة الصور (board) وأماكن التخمين (slots) */
+    #board,
     #slots {
       display: flex;
       justify-content: space-between;
       gap: 6px;
       width: 100%;
       max-width: 800px;
-      margin-bottom: 16px;
-      background: transparent;
+      margin-bottom: 12px;
     }
     .slot {
       width: calc((100% - 5 * 6px) / 6);
@@ -150,7 +149,7 @@
       user-select: none;
     }
 
-    /* تغذية راجعة (عدد الإجابات الصحيحة) */
+    /* 7. تغذية راجعة لعدد الإجابات الصحيحة */
     #feedback {
       font-size: 1rem;
       margin-bottom: 12px;
@@ -159,7 +158,7 @@
       font-weight: 700;
     }
 
-    /* عرض الترتيب الصحيح بعد انتهاء الجولة */
+    /* 8. عرض الترتيب الصحيح بعد انتهاء الجولة */
     #correctAnswer {
       display: none;
       margin-top: 16px;
@@ -192,10 +191,10 @@
       border: 2px solid #a5d6a7;
     }
 
-    /* التكيّف مع الشاشات الصغيرة */
+    /* 9. استعلام الوسائط للهواتف العمودية */
     @media (max-width: 480px) {
       body {
-        padding: 5px;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
       }
       #playersScores li {
         font-size: 0.9rem;
@@ -211,22 +210,22 @@
       }
     }
 
-    /* عند قلب الجوال إلى وضع أفقي (Landscape) */
+    /* 10. استعلام الوسائط عند قلب الجوال أفقيًا */
     @media (orientation: landscape) and (max-width: 767px) {
+      body {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+      #playersScores li {
+        font-size: 0.85rem;
+      }
       #board,
       #slots,
       #correctAnswer .grid {
         gap: 8px;
-        max-width: 100vw;
+        max-width: 100vw; /* يغطي كامل عرض شاشة الجوال الأفقي */
       }
       .slot {
         width: calc((100% - 5 * 8px) / 6);
-      }
-      body {
-        padding: 2px;
-      }
-      #playersScores li {
-        font-size: 0.85rem;
       }
     }
   </style>
@@ -265,20 +264,23 @@
   </div>
 
   <script>
-    // منع قائمة النقر اليمنى على الصور
-    document.body.addEventListener('contextmenu', e => {
-      if (e.target.tagName === 'IMG') e.preventDefault();
-    });
-
     const socket = io();
 
-    // قراءة room و name من رابط الصفحة
+    // 1. قراءة room و playerName من الرابط (Query String)
     const params   = new URLSearchParams(location.search);
-    const roomId   = params.get('room') || 'eid-room';
-    let playerName = params.get('name') || prompt('أدخل اسمك');
+    const roomId   = params.get('room')   || 'eid-room';
+    let playerName = params.get('name')   || prompt('أدخل اسمك');
     playerName     = decodeURIComponent(playerName);
 
-    // مراجع DOM
+    // 2. نعالج الانضمام مرة واحدة فقط باستخدام sessionStorage
+    const storageKey = `joined_${roomId}_${playerName}`;
+    if (!sessionStorage.getItem(storageKey)) {
+      socket.emit('joinRoom', { roomId, playerName });
+      sessionStorage.setItem(storageKey, 'true');
+    } 
+    // إذا عدنا تحميل الصفحة، لن ننادي joinRoom ثانية (يمكنك إضافة rejoin عند دعم السيرفر)
+
+    // 3. مراجع عناصر DOM
     const roomDisplay   = document.getElementById('roomDisplay');
     const playersScores = document.getElementById('playersScores');
     const teamEl        = document.getElementById('teamName');
@@ -293,14 +295,11 @@
 
     let items = [], draggedImg = null;
 
-    // عرض رمز الغرفة واسم اللاعب
+    // 4. تحديث عنوان الغرفة واسم اللاعب
     roomDisplay.textContent = `رمز الغرفة: ${roomId}`;
     teamEl.textContent      = playerName;
 
-    // انضمام اللاعب إلى الغرفة
-    socket.emit('joinRoom', { roomId, playerName });
-
-    // استقبال تحديث الحالة (قائمة اللاعبين + النقاط)
+    // 5. استقبال التحديثات للحالة (Players + Scores)
     socket.on('stateMulti', ({ scores: sc, players }) => {
       playersScores.innerHTML = '';
       players.forEach(p => {
@@ -311,23 +310,21 @@
       });
     });
 
-    // معالجة خطأ بدء الجولة بدون لاعبين كافيين
+    // 6. معالجة خطأ في الانضمام
     socket.on('errorMulti', ({ message }) => {
       alert(message);
     });
 
-    // عند الضغط على "بدء الجولة"
+    // 7. بدء الجولة
     startBtn.addEventListener('click', () => {
       socket.emit('startRound', { roomId });
       startBtn.disabled = true;
     });
 
-    // استقبال بداية الجولة
+    // 8. استقبال بداية الجولة (Round Started)
     socket.on('roundStartedMulti', ({ items: newItems, roundName: cat, scores: sc, currentRound, players }) => {
       items = newItems;
-      // تحديث عنوان الجولة
       roundEl.textContent = `الجولة ${currentRound}: ${translateCategory(cat)}`;
-      // تحديث النقاط
       playersScores.innerHTML = '';
       players.forEach(p => {
         const li = document.createElement('li');
@@ -336,16 +333,14 @@
         playersScores.appendChild(li);
       });
 
-      // إعداد التغذية الراجعة
       fb.style.visibility = 'visible';
-      fb.textContent = `الإجابات الصحيحة: 0 من ${items.length}`;
-      submitBtn.disabled = false;
+      fb.textContent      = `الإجابات الصحيحة: 0 من ${items.length}`;
+      submitBtn.disabled  = false;
 
-      // إخفاء الترتيب الصحيح السابق إن وُجد
       correctAnswer.style.display = 'none';
-      answerGrid.innerHTML = '';
+      answerGrid.innerHTML       = '';
 
-      // بناء لوحة الصور الأصلية (٦ صور)
+      // بناء لوحة الصور الأصلية
       boardEl.innerHTML = '';
       items.forEach(src => {
         const slot = document.createElement('div');
@@ -354,7 +349,7 @@
         slot.addEventListener('drop', dropOnBoard);
 
         const img = document.createElement('img');
-        img.src = src;
+        img.src       = src;
         img.draggable = true;
         img.addEventListener('dragstart', e => {
           draggedImg = e.target;
@@ -366,7 +361,7 @@
         boardEl.appendChild(slot);
       });
 
-      // بناء مربعات التخمين الفارغة (٦ خانات)
+      // بناء لوحة التخمين (Slots)
       slotsEl.innerHTML = '';
       items.forEach(() => {
         const slot = document.createElement('div');
@@ -377,95 +372,79 @@
       });
     });
 
-    // عند الضغط على "تأكيد"
+    // 9. عند الضغط على "تأكيد"
     submitBtn.addEventListener('click', () => {
       const order = Array.from(slotsEl.children).map(s => {
         const img = s.querySelector('img');
         return img ? img.getAttribute('src').replace(location.origin, '') : null;
       });
-      socket.emit('submitOrder', {
-        roomId,
-        playerId: playerName,
-        order
-      });
-      // لا نعطّل الزر؛ يمكن الضغط مجددًا حتى إكمال الترتيب الصحيح
+      socket.emit('submitOrder', { roomId, playerId: playerName, order });
     });
 
-    // استقبال تغذية راجعة لعدد الإجابات الصحيحة
+    // 10. استقبال التغذية الراجعة لعدد الإجابات الصحيحة
     socket.on('feedbackMulti', ({ player, correctCount, total }) => {
       if (player === playerName) {
         fb.textContent = `الإجابات الصحيحة: ${correctCount} من ${total}`;
       }
     });
 
-    // استقبال نتيجة الجولة (فوز/خسارة + عرض الترتيب الصحيح)
+    // 11. استقبال نتيجة الجولة (فوز أو خسارة + عرض الإجابة الصحيحة)
     socket.on('roundWinMulti', ({ scores: sc, winners, roundNumber, answer }) => {
-      // تحديث النقاط
       playersScores.innerHTML = '';
       Object.entries(sc).forEach(([name, pts]) => {
         const li = document.createElement('li');
         li.textContent = `${name}: ${pts} نقطة`;
         playersScores.appendChild(li);
       });
-
-      // رسالة الفوز/الخسارة
       if (winners.includes(playerName)) {
         fb.textContent = `🎉 لقد فزت في هذه الجولة!`;
       } else {
         fb.textContent = `😢 خسرت هذه الجولة!`;
       }
-
-      // عرض الترتيب الصحيح (٦ صور)
       answerGrid.innerHTML = '';
       answer.forEach(src => {
         const slot = document.createElement('div');
         slot.className = 'slot';
         const img = document.createElement('img');
-        img.src = src;
+        img.src       = src;
         img.draggable = false;
         slot.appendChild(img);
         answerGrid.appendChild(slot);
       });
       correctAnswer.style.display = 'block';
-
-      // تعطيل زر "تأكيد" بعد انتهاء الجولة
       submitBtn.disabled = true;
     });
 
-    // استقبال إشارة لإعادة تفعيل زر بدء الجولة التالية
+    // 12. إعادة تفعيل زر "بدء الجولة التالية"
     socket.on('enableStartNext', () => {
       startBtn.disabled   = false;
       startBtn.textContent = 'بدء الجولة التالية';
     });
 
-    // استقبال نهاية اللعبة النهائي
+    // 13. استقبال نهاية اللعبة النهائية
     socket.on('finalGameEndMulti', ({ scores: sc, finalWinners }) => {
-      // تحديث النقاط النهائية
       playersScores.innerHTML = '';
       Object.entries(sc).forEach(([name, pts]) => {
         const li = document.createElement('li');
         li.textContent = `${name}: ${pts} نقطة`;
         playersScores.appendChild(li);
       });
-
-      // عرض نافذة Overlay للتهنئة أو التعادل
       const overlay = document.createElement('div');
       overlay.style.position = 'fixed';
-      overlay.style.top = '0';
-      overlay.style.left = '0';
-      overlay.style.width = '100%';
-      overlay.style.height = '100%';
+      overlay.style.top      = '0';
+      overlay.style.left     = '0';
+      overlay.style.width    = '100%';
+      overlay.style.height   = '100%';
       overlay.style.background = 'rgba(0,0,0,0.8)';
-      overlay.style.display = 'flex';
+      overlay.style.display    = 'flex';
       overlay.style.flexDirection = 'column';
       overlay.style.justifyContent = 'center';
-      overlay.style.alignItems = 'center';
-      overlay.style.color = '#fff';
-      overlay.style.fontSize = '2rem';
-      overlay.style.zIndex = '999';
-      overlay.style.textAlign = 'center';
-      overlay.style.padding = '20px';
-
+      overlay.style.alignItems     = 'center';
+      overlay.style.color        = '#fff';
+      overlay.style.fontSize     = '2rem';
+      overlay.style.zIndex       = '999';
+      overlay.style.textAlign    = 'center';
+      overlay.style.padding      = '20px';
       let message = '';
       if (finalWinners.includes(playerName)) {
         message = '🎉 ألف مبروك! أنت الفائز!';
@@ -474,29 +453,23 @@
       } else {
         message = '⚖️ انتهت اللعبة بتعادل بين:\n' + finalWinners.join(' و ');
       }
-      const lines = message.split('\n');
-      lines.forEach((ln, idx) => {
+      message.split('\n').forEach((ln, idx) => {
         const p = document.createElement('div');
         p.textContent = ln;
         if (idx === 0) p.style.marginBottom = '12px';
         overlay.appendChild(p);
       });
-
       document.body.appendChild(overlay);
-
-      // بعد 5 ثوانٍ إعادة توجيه إلى الصفحة الرئيسية للخادم
       setTimeout(() => {
         window.location.href = 'index.html';
       }, 5000);
     });
 
-    // وظيفة الإسقاط في خانة التخمين (dropOnSlot)
+    // 14. وظائف السحب والإفلات
     function dropOnSlot(e) {
       e.preventDefault();
       const from = e.dataTransfer.getData('from');
       const url  = e.dataTransfer.getData('text/plain');
-
-      // حالة السحب من اللوحة الأصلية للانتقال إلى مكان التخمين
       if (from === 'board') {
         if (e.currentTarget.querySelector('img')) return;
         const orig = boardEl.querySelector(`img[src="${url}"]`);
@@ -510,9 +483,7 @@
           ev.dataTransfer.setData('from', 'slot');
         });
         e.currentTarget.appendChild(img);
-      }
-      // حالة التبديل بين خانات التخمين
-      else if (from === 'slot') {
+      } else if (from === 'slot') {
         if (!draggedImg) return;
         if (!e.currentTarget.querySelector('img')) {
           const parentOfDragged = draggedImg.parentElement;
@@ -526,8 +497,6 @@
         }
       }
     }
-
-    // وظيفة الإسقاط للعودة إلى اللوحة الأصلية (dropOnBoard)
     function dropOnBoard(e) {
       e.preventDefault();
       if (e.dataTransfer.getData('from') !== 'slot') return;
@@ -539,7 +508,7 @@
       }
     }
 
-    // ترجمة اسم التصنيف إلى العربي
+    // 15. دالة لترجمة اسم التصنيف إلى العربي
     function translateCategory(cat) {
       const catNames = {
         fruits:  'الفواكه',
