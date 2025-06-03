@@ -102,32 +102,39 @@
       transform: scale(0.98);
     }
 
-    /* لوحة الصور الأصلية */
-    #board {
-      display: flex;
-      justify-content: space-between;
-      gap: 4px; /* تقليل الفجوة بين الخانات */
-      width: 100%;
-      max-width: 360px;
-      margin-bottom: 8px; /* مسافة بسيطة قبل لوح التخمين */
-    }
-    /* لوحة أماكن التخمين */
-    #slots {
-      display: flex;
-      justify-content: space-between;
-      gap: 4px;
-      width: 100%;
-      max-width: 360px;
-      margin-bottom: 16px;
-    }
-    .slot {
-      width: calc((100% - 5 * 4px) / 6);
-      aspect-ratio: 1;
-      background: transparent; /* صارت شفافة بدل الأبيض الشبه شفاف */
-      border: 2px solid #a5d6a7; /* إطار صلب */
-      border-radius: 4px;
-      position: relative;
-    }
+    /* نسمح للوحتيّ الصور والتخمين أن تملأا تقريبًا كامل عرض الشاشة على الهواتف والحواسب */
+#board,
+#slots {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;           /* نزيد الفجوة قليلاً لتجنّب تلاصق الصور عند التكبير */
+  width: 100%;
+  max-width: 800px;   /* نرفع الحد الأقصى إلى 800px ليعرض الصور بحجم أكبر على الشاشات العريضة */
+  margin-bottom: 12px;
+}
+
+/* إعادة حساب عرض كل خانة بحيث تكون أكبر نسبيًا */
+.slot {
+  width: calc((100% - 5 * 6px) / 6); /* استخدمنا gap = 6px بدلاً من 4px */
+  aspect-ratio: 1;
+  background: transparent;
+  border: 2px solid #a5d6a7;
+  border-radius: 4px;
+  position: relative;
+}
+
+/* تكيّف للشاشات الصغير جدًّا */
+@media (max-width: 480px) {
+  #board,
+  #slots {
+    gap: 4px;         /* أقل قليلاً لكي تملأ الخانات العرض بالكامل */
+    max-width: 100%;  /* تمكين الملء الكامل للشاشة الصغيرة */
+  }
+  .slot {
+    width: calc((100% - 5 * 4px) / 6);
+  }
+}
+
     .slot img {
       position: absolute;
       top: 0;
