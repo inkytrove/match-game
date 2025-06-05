@@ -1,3 +1,4 @@
+// server.js
 const express  = require('express');
 const http     = require('http');
 const socketIo = require('socket.io');
@@ -7,6 +8,7 @@ const app    = express();
 const server = http.createServer(app);
 const io     = socketIo(server);
 
+// مسار المجلد الثابت (تأكد أن مسار memory-reorder-static صحيح)
 const staticPath = path.join(__dirname, '../memory-reorder-static');
 app.use(express.static(staticPath));
 
@@ -73,18 +75,19 @@ const categoryImages = {
 // قائمة التصنيفات أبجديًا
 const categories = Object.keys(categoryImages);
 
-// كائن لتخزين بيانات كل غرفة
-// هيكل بيانات الغرفة سيكون على النحو التالي:
-// rooms[roomId] = {
-//   players: [ { id: socket.id, name: playerName }, ... ],
-//   categoryOrder: [ 'tools', 'animals', 'drinks', 'veggies', 'fruits' ],
-//   roundIndex: 0,
-//   scores: { 'Ali':0, 'Sara':1, ... },
-//   submissions: { 'Ali': { correct: 4 }, ... },
-//   items: [],   // الصور العشوائية المعروضة في الجولة
-//   answer: [],  // الترتيب الصحيح (عشوائي من items)
-//   gameStarted: false
-// }
+/**
+ * هيكل بيانات كل غرفة
+ * rooms[roomId] = {
+ *   players: [ { id: socket.id, name: playerName }, ... ],
+ *   categoryOrder: [ 'tools', 'animals', 'drinks', 'veggies', 'fruits' ],
+ *   roundIndex: 0,
+ *   scores: { 'Ali':0, 'Sara':1, ... },
+ *   submissions: { 'Ali': { correct: 4 }, ... },
+ *   items: [],   // الصور العشوائية المعروضة في الجولة
+ *   answer: [],  // الترتيب الصحيح (عشوائي من items)
+ *   gameStarted: false
+ * }
+ */
 const rooms = {};
 
 io.on('connection', socket => {
@@ -92,7 +95,7 @@ io.on('connection', socket => {
 
   /**
    * 1) حدث للتحقق من حالة الجولة قبل الانضمام
-   *    العميل يرسل roomId، والخادم يردّ بـ { inProgress: true/false }
+   *    العميل يرسل roomId، والخادم يرد بـ { inProgress: true/false }
    */
   socket.on('checkGameStatus', ({ roomId }) => {
     const room = rooms[roomId];
@@ -105,10 +108,10 @@ io.on('connection', socket => {
 
   /**
    * 2) حدث انضمام اللاعب إلى غرفة
-   *    يتوقع المعطيات: { roomId, playerName }
+   *    يتوقّع المعطيات: { roomId, playerName }
    */
   socket.on('joinRoom', ({ roomId, playerName }) => {
-    // إذا هذه أول مرة للغرفة، ننشئها
+    // إنشاء الغرفة إن لم تكن موجودة
     if (!rooms[roomId]) {
       const randomOrder = shuffle(categories);
       rooms[roomId] = {
@@ -124,22 +127,22 @@ io.on('connection', socket => {
     }
     const room = rooms[roomId];
 
-    // إذا كانت الجولة قد بدأت بالفعل، نرسل رسالة خطأ للعميل ونمنعه من الانضمام
+    // إذا الجولة بدأت بالفعل، نمنع الانضمام
     if (room.gameStarted) {
       socket.emit('errorJoin', {
-        message: 'للأسف الجُولة بدأت بالفعل؛ لا يمكنك الانضمام الآن.'
+        message: 'للأسف الجولة بدأت بالفعل؛ لا يمكنك الانضمام الآن.'
       });
       return;
     }
 
-    // خلاف ذلك، نضيف اللاعب إذا لم يكن موجودًا بالفعل
+    // إضافة اللاعب إذا لم يكن موجودًا
     if (!room.players.some(p => p.id === socket.id)) {
       room.players.push({ id: socket.id, name: playerName });
       room.scores[playerName] = 0;
     }
     socket.join(roomId);
 
-    // نُرسل لجميع اللاعبين في الغرفة (stateMulti) لتحديث قائمة اللاعبين والنقاط
+    // أرسل تحديث قائمة اللاعبين والنقاط للجميع
     io.in(roomId).emit('stateMulti', {
       players: room.players.map(p => ({ name: p.name })),
       scores: room.scores
@@ -148,13 +151,13 @@ io.on('connection', socket => {
 
   /**
    * 3) حدث بدء جولة جديدة
-   *    يتوقع المعطيات: { roomId }
+   *    يتوقّع المعطيات: { roomId }
    */
   socket.on('startRound', ({ roomId }) => {
     const room = rooms[roomId];
     if (!room) return;
 
-    // لا نبدأ الجولة إلا إذا كان هناك لاعبان على الأقل
+    // لا نبدأ الجولة إلّا إذا كان هناك لاعبان على الأقل
     if (room.players.length < 2) {
       socket.emit('errorMulti', {
         message: 'يجب أن يكون هناك لاعبان على الأقل لبدء الجولة.'
@@ -165,27 +168,27 @@ io.on('connection', socket => {
     // لا نبدأ إذا انتهت 5 جولات أو وصل أحدهم إلى 3 نقاط
     const someoneWinner = Object.values(room.scores).some(v => v === 3);
     if (room.roundIndex >= 5 || someoneWinner) {
-      // لا نرسل خطأ هنا، بل نتركه ببساطة
       return;
     }
 
-    // نضع علم أن الجولة قد بدأت
+    // علَم بأن الجولة قد بدأت
     room.gameStarted = true;
 
-    // اختر التصنيف التالي من التسلسل العشوائي المحفوظ
+    // اختر التصنيف الحالي
     const currentCategory = room.categoryOrder[room.roundIndex];
     const allItems        = categoryImages[currentCategory];
     const shuffledItems   = shuffle(allItems);
     const answerOrder     = shuffle(shuffledItems);
 
-    // احفظ بيانات الجولة في الغرفة
+    // خزّن بيانات الجولة في الغرفة
     room.items       = shuffledItems;
     room.answer      = answerOrder;
-    room.submissions = {}; // نعيد تهيئة التخمينات
+    room.submissions = {}; // إعادة تهيئة التخمينات
 
-    // أرسل إلى الجميع حدث بدء الجولة (roundStartedMulti)
+    // أرسل للجميع: (items, answer, roundName, scores, currentRound, players)
     io.in(roomId).emit('roundStartedMulti', {
       items: shuffledItems,
+      answer: answerOrder,             // ← الترتيب الصحيح يُرسل هنا
       roundName: currentCategory,
       scores: room.scores,
       currentRound: room.roundIndex + 1,
@@ -194,16 +197,14 @@ io.on('connection', socket => {
   });
 
   /**
-   * 4) استقبال تخمين (submitOrder) من أحد اللاعبين
-   *    يتوقع المعطيات: { roomId, playerId, order }
-   *    - playerId هو اسم اللاعب (كما خزّنّاه في room.players[].name)
-   *    - order هو مصفوفة من مسارات الصور (Strings)، بترتيبٍ يختاره اللاعب
+   * 4) استقبال تخمين (submitOrder) من لاعب
+   *    يتوقّع المعطيات: { roomId, playerId, order }
    */
   socket.on('submitOrder', ({ roomId, playerId, order }) => {
     const room = rooms[roomId];
     if (!room) return;
 
-    // نحسب عدد الإجابات الصحيحة لهذا التخمين
+    // حساب عدد الإجابات الصحيحة
     let correctCount = 0;
     for (let i = 0; i < room.answer.length; i++) {
       if (room.answer[i] === order[i]) {
@@ -211,22 +212,20 @@ io.on('connection', socket => {
       }
     }
 
-    // سجِّل أو حدّث تخمين هذا اللاعب في الغرفة
+    // سجلّ تخمين هذا اللاعب
     room.submissions[playerId] = { correct: correctCount };
 
-    // أرسل تغذية راجعة (feedbackMulti) لكل اللاعبين
+    // أرسل تغذية راجعة للجميع
     io.in(roomId).emit('feedbackMulti', {
       player: playerId,
       correctCount,
       total: room.answer.length
     });
 
-    // إذا اللاعب حقّق الصف الكامل (6/6)، نعلنه فائز الجولة فورًا
+    // إن كان قد حقق الصف الكامل (6/6)، نعلنه فائز الجولة
     if (correctCount === room.answer.length) {
-      // نزود اللاعب بنقطة واحدة
       room.scores[playerId] = (room.scores[playerId] || 0) + 1;
 
-      // أرسل حدث فوز الجولة (roundWinMulti) لكل اللاعبين
       io.in(roomId).emit('roundWinMulti', {
         scores: room.scores,
         winners: [playerId],
@@ -234,60 +233,52 @@ io.on('connection', socket => {
         answer: room.answer
       });
 
-      // زد عدّاد الجولات
       room.roundIndex++;
 
       // تحقق إن انتهت اللعبة (5 جولات أو وصول أحدهم إلى 3 نقاط)
       const someoneWinnerFinal = Object.values(room.scores).some(v => v === 3);
       if (room.roundIndex >= 5 || someoneWinnerFinal) {
-        // حدد الفائزات/الفائزين النهائيّين (أعلى نقاط)
         const maxPts = Math.max(...Object.values(room.scores));
         const finalWinners = Object.entries(room.scores)
           .filter(([name, pts]) => pts === maxPts)
-          .map(([name, _]) => name);
+          .map(([name]) => name);
 
         io.in(roomId).emit('finalGameEndMulti', {
           scores: room.scores,
           finalWinners
         });
 
-        // بعد دقيقتين (120,000 مللي ثانية)، نحذف بيانات الغرفة كي تُعاد إنشاؤها لاحقًا
+        // بعد دقيقتين، احذف بيانات الغرفة لإعادة إنشائها لاحقًا
         setTimeout(() => {
           delete rooms[roomId];
         }, 2 * 60 * 1000);
-
       } else {
-        // إن لم تنتهِ اللعبة بعد، أعد تفعيل زر “بدء الجولة التالية”
+        // لم تنتهِ بعد: أعد تفعيل زرّ "بدء الجولة التالية"
         io.in(roomId).emit('enableStartNext');
       }
 
       return;
     }
 
-    // إذا لم يحصُل على 6/6، ننتظر بقية اللاعبين أو إعادة المحاولة من نفسه
+    // إن لم يحصل على 6/6، نبقى ننتظر باقي اللاعبين
   });
 
   /**
-   * 5) عند انقطاع اتصال (disconnect) أي عميل، نديره هكذا:
-   *    - نبحث أي غرفة ينتمي إليها عبر socket.id
-   *    - نحذفه من room.players و room.scores
-   *    - نبعث تحديث stateMulti لباقي اللاعبين في الغرفة
+   * 5) عند انقطاع اتصال (disconnect) أي عميل
    */
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
 
     for (const roomId in rooms) {
       const room = rooms[roomId];
-      // نبحث عن مدخل اللاعب في هذه الغرفة
       const entry = room.players.find(p => p.id === socket.id);
       if (entry) {
         const playerName = entry.name;
-        // نحذفه من قائمة اللاعبين والنقاط
         room.players = room.players.filter(p => p.id !== socket.id);
         delete room.scores[playerName];
         delete room.submissions[playerName];
 
-        // نُرسل للّاعبين المتبقّين تحديث الحالة
+        // أرسل تحديث قائمة اللاعبين والنقاط المتبقية
         io.in(roomId).emit('stateMulti', {
           players: room.players.map(p => ({ name: p.name })),
           scores: room.scores
@@ -296,7 +287,6 @@ io.on('connection', socket => {
       }
     }
   });
-
 });
 
 server.listen(PORT, () => {
