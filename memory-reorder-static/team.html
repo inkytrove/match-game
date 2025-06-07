@@ -327,6 +327,14 @@
     roomDisplay.textContent = `رمز الغرفة: ${roomId}`;
     teamEl.textContent      = playerName;
 
+    // hide pre-game only until the first round starts
+    document.getElementById('roundName').style.display     = 'none';
+    document.querySelector('.instructions').style.display  = 'none';
+    fb.style.display = 'none';
+    document.getElementById('feedback').style.visibility   = 'none';
+    document.getElementById('submit').style.display        = 'none';
+
+
     socket.on('stateMulti', ({ scores: sc, players }) => {
       playersScores.innerHTML = '';
       players.forEach(p => {
@@ -350,6 +358,11 @@
   socket.on('roundStartedMulti', ({ items: newItems, roundName: cat, scores: sc, currentRound, players, answer }) => {
   items = newItems;
   roundEl.textContent = `الجولة ${currentRound}: ${translateCategory(cat)}`;
+      roundEl.style.display = 'block';
+      document.querySelector('.instructions').style.display = 'block';
+      document.getElementById('feedback').style.display     = 'block';
+      fb.style.visibility = 'block';
+      submitBtn.style.display = 'inline-block';
 
   // تحديث النقاط
   playersScores.innerHTML = '';
