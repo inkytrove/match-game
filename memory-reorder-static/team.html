@@ -78,18 +78,17 @@
     }
 
     /* 4. قائمة اللاعبين + نقاطهم */
-    #playersScores {
-      margin-bottom: 12px;
-      width: 100%;
-      max-width: 360px;
-      list-style: none;
-      padding: 0;
-    }
-    #playersScores li {
-      font-size: 1rem;
-      margin-bottom: 4px;
-      color: #c5e1a5;
-    }
+#playersScores {
+  column-count: 3;    /* نقسّم إلى 3 أعمدة تلقائياً */
+  column-gap: 1em;    /* مسافة بين الأعمدة */
+}
+#playersScores li {
+  break-inside: avoid;  /* لا يكسر العنصر بين عمودين */
+  list-style: none;
+  margin-bottom: 0.5em; /* مسافة بين الأسطر داخل العمود */
+  text-align: center;
+}
+
 
     /* 5. أزرار البدء والتأكيد */
     .controls {
